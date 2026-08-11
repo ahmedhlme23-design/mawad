@@ -4,8 +4,8 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("POSTGRES_PRISMA_URL") // متغير Vercel الرائسي
-  directUrl = env("POSTGRES_URL_NON_POOLING") // المباشر للـ Migrations
+  url       = env("POSTGRES_PRISMA_URL") 
+  directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
 model User {
