@@ -4,7 +4,6 @@ import { prisma } from '@/lib/db';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    console.log('Telegram Webhook Body:', JSON.stringify(body));
 
     if (body.message?.text) {
       const text: string = body.message.text;
@@ -12,17 +11,15 @@ export async function POST(req: Request) {
 
       if (text.startsWith('/start')) {
         const parts = text.split(' ');
-        const token = parts[1]; // استخراج التوكن المرفق في الرابط
+        const token = parts[1];
 
         if (token) {
-          // استخدام upsert لإنشاء أو تحديث التوكن لضمان عدم حدوث خطأ
           await prisma.telegramToken.upsert({
             where: { token },
             update: { chatId, isLinked: true },
             create: { token, chatId, isLinked: true },
           });
 
-          // إرسال رسالة التأكيد للمستخدم على تيليجرام
           const botToken = process.env.TELEGRAM_BOT_TOKEN;
           if (botToken) {
             await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
@@ -38,9 +35,9 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true }, { status: 200 });
   } catch (error) {
-    console.error('Webhook Internal Error:', error);
-    return NextResponse.json({ ok: true });
+    console.error('Webhook Error:', error);
+    return NextResponse.json({ ok: true }, { status: 200 });
   }
 }

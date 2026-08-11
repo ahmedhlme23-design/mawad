@@ -11,7 +11,8 @@ interface Props {
 export function AppointmentModal({ isOpen, onClose, onSuccess }: Props) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [dateTime, setDateTime] = useState('');
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
@@ -21,16 +22,24 @@ export function AppointmentModal({ isOpen, onClose, onSuccess }: Props) {
     setLoading(true);
 
     try {
+      // دمج التاريخ والوقت في صيغة ISO لتخزينها في قاعدة البيانات
+      const combinedDateTime = new Date(`${date}T${time}`).toISOString();
+
       const res = await fetch('/api/appointments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, dateTime }),
+        body: JSON.stringify({ 
+          title, 
+          description, 
+          dateTime: combinedDateTime 
+        }),
       });
 
       if (res.ok) {
         setTitle('');
         setDescription('');
-        setDateTime('');
+        setDate('');
+        setTime('');
         onSuccess();
         onClose();
       }
@@ -67,15 +76,29 @@ export function AppointmentModal({ isOpen, onClose, onSuccess }: Props) {
             />
           </div>
 
-          <div>
-            <label className="block text-sm mb-1 text-slate-700 dark:text-slate-300">التاريخ والوقت *</label>
-            <input
-              type="datetime-local"
-              required
-              value={dateTime}
-              onChange={(e) => setDateTime(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg dark:bg-slate-800 text-slate-800 dark:text-white"
-            />
+          {/* فصل التاريخ والوقت إلى حقلين مستقلين */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm mb-1 text-slate-700 dark:text-slate-300">التاريخ *</label>
+              <input
+                type="date"
+                required
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg dark:bg-slate-800 text-slate-800 dark:text-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm mb-1 text-slate-700 dark:text-slate-300">الوقت *</label>
+              <input
+                type="time"
+                required
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg dark:bg-slate-800 text-slate-800 dark:text-white"
+              />
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
