@@ -4,45 +4,43 @@ import { prisma } from '@/lib/db';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const message = body.message;
 
-    if (message && message.text) {
-      const chatId = message.chat.id.toString();
-      const text = message.text as string;
+    // التأكد من وجود رسالة وأمر /start
+    if (body.message && body.message.text) {
+      const text = body.message.text;
+      const chatId = body.message.chat.id.toString();
 
-      // التأكد أن الرسالة تبدأ بـ /start وبداخلها Token
-      if (text.startsWith('/start ')) {
-        const token = text.split(' ')[1];
+      if (text.startsWith('/start')) {
+        const token = text.split(' ')[1]; // استخراج التوكن المرفق مع /start
 
-        // البحث عن التوكن والتأكد من وجوده
-        const tokenRecord = await prisma.telegramToken.findUnique({
-          where: { token },
-        });
-
-        if (tokenRecord) {
-          // تحديث حالة التوكن وتخزين Chat ID
+        if (token) {
+          // تحديث التوكن في قاعدة البيانات لربطه بالـ chatId
           await prisma.telegramToken.update({
             where: { token },
             data: { chatId, isLinked: true },
           });
 
-          // إرسال رسالة تأكيد للمستخدم على التيليجرام
-          const botToken = process.env.TELEGRAM_BOT_TOKEN;
-          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              chat_id: chatId,
-              text: '✅ تم ربط حسابك بالموقع بنجاح! يمكنك إغلاق المحادثة والعودة للموقع لإكمال التسجيل.',
-            }),
-          });
+          // إرسال رسالة تأكيد للمستخدم داخل تيليجرام
+          await fetch(
+            `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chat_id: chatId,
+                text: 'تم ربط حسابك بنجاح! يمكنك الآن العودة للموقع وإتمام التسجيل.',
+              }),
+            }
+          );
         }
       }
     }
 
-    return NextResponse.json({ status: 'ok' });
+    // إرجاع 200 OK دائماً لتيليجرام
+    return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error('Webhook error:', error);
-    return NextResponse.json({ error: 'Failed' }, { status: 500 });
+    console.error('Webhook Error:', error);
+    // إرجاع 200 لتجنب إعادة المحاولات المتكررة من تيليجرام عند حدوث خطأ
+    return NextResponse.json({ ok: true });
   }
 }
