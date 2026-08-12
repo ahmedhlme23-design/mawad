@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const [editingAppointment, setEditingAppointment] = useState<AppointmentItem | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileName, setProfileName] = useState('');
+  const [oldPassword, setOldPassword] = useState('');
   const [profilePassword, setProfilePassword] = useState('');
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState('');
@@ -70,6 +71,7 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: profileName,
+          oldPassword,
           password: profilePassword,
         }),
       });
@@ -77,6 +79,7 @@ export default function DashboardPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'حدث خطأ أثناء تحديث الملف الشخصي');
 
+      setOldPassword('');
       setProfilePassword('');
       setIsProfileOpen(false);
       fetchProfile();
@@ -166,6 +169,17 @@ export default function DashboardPage() {
                     type="text"
                     value={profileName}
                     onChange={(e) => setProfileName(e.target.value)}
+                    className="w-full px-4 py-2 border rounded-lg dark:bg-slate-800 text-slate-800 dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-1 text-slate-700 dark:text-slate-300">كلمة المرور القديمة</label>
+                  <input
+                    type="password"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    placeholder="يجب إدخالها إذا كنت تريد تغيير كلمة المرور"
                     className="w-full px-4 py-2 border rounded-lg dark:bg-slate-800 text-slate-800 dark:text-white"
                   />
                 </div>

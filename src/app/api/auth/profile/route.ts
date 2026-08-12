@@ -10,7 +10,22 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: 'غير مصرح' }, { status: 401 });
   }
 
-  const { name, password } = await req.json();
+  const { name, oldPassword, password } = await req.json();
+  const currentUser = await prisma.user.findUnique({ where: { id: userId } });
+
+  if (!currentUser) {
+    return NextResponse.json({ error: 'المستخدم غير موجود' }, { status: 404 });
+  }
+
+  if (typeof password === 'string' && password.trim()) {
+    if (typeof oldPassword !== 'string' || !oldPassword.trim()) {
+      return NextResponse.json({ error: 'يجب إدخال كلمة المرور القديمة لتغيير كلمة المرور' }, { status: 400 });
+    }
+
+    if (oldPassword !== currentUser.password) {
+      return NextResponse.json({ error: 'كلمة المرور القديمة غير صحيحة' }, { status: 400 });
+    }
+  }
 
   const updateData: { name?: string; password?: string } = {};
 
